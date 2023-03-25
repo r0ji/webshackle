@@ -5,63 +5,60 @@ const blockedDomains = [
   'example.com'
   ];
 
-const blockDurationInMinutes = 5;
-const blockIntervalInMinutes = 30;
-
 const blockIP = '0.0.0.0';
 
 function unblockDomains() {
   blockedDomains.forEach((domain) => {
-    const entry = `${blockIP} ${domain} # Added by WebShackle`;
     const hostsFile = '/etc/hosts';
     let hosts = require('fs').readFileSync(hostsFile, 'utf8');
-    const re = new RegExp(`(\\n){1,}(${blockIP}\\s${domain}.*) # Added by WebShackle(\\n){0,}`, 'g');
+    const re = new RegExp(`(^|\\n)${blockIP}\\s${domain}(\\s+# Added by WebShackle)?`, 'g');
     hosts = hosts.replace(re, '');
     require('fs').writeFileSync(hostsFile, hosts);
     const timestamp = new Date().toISOString().replace('T', ' ').slice(0, -5);
-    console.log(`${timestamp} - ${entry} unblocked`);
+    console.log(`${timestamp} - UNBLOCKED: ${domain}`);
   });
 }
-
 
 function blockDomains() {
   blockedDomains.forEach((domain) => {
-    const entry = `${blockIP} ${domain} # Added by WebShackle`;
+    const entry = `${blockIP} ${domain}`;
     const hostsFile = '/etc/hosts';
     const hosts = require('fs').readFileSync(hostsFile, 'utf8');
-    if (hosts.indexOf(entry) === -1) {
-      require('fs').appendFileSync(hostsFile, `\n${entry}`);
+    if (!hosts.includes(entry)) {
+      require('fs').appendFileSync(hostsFile, `\n${entry} # Added by WebShackle`);
       const timestamp = new Date().toISOString().replace('T', ' ').slice(0, -5);
-      console.log(`${timestamp} - ${entry} blocked`);
+      console.log(`${timestamp} - BLOCKED: ${domain}`);
     }
   });
-  setTimeout(() => {
-    unblockDomains();
-  }, blockDurationInMinutes * 60 * 1000);
 }
 
-function scheduleBlock() {
+function checkCurrentTime() {
   const currentTime = new Date();
-  const minutes = currentTime.getMinutes();
-  if (minutes === 0 || minutes === 30) {
+  const currentMinutes = currentTime.getMinutes();
+  
+  if ((currentMinutes >= 0 && currentMinutes < 5) || (currentMinutes >= 30 && currentMinutes < 35)) {
     unblockDomains();
-    setTimeout(() => {
-      blockDomains();
-    }, blockDurationInMinutes * 60 * 1000);
   } else {
-    const nextBlockTime = new Date(currentTime);
-    nextBlockTime.setMinutes((Math.floor(minutes / blockIntervalInMinutes) + 1) * blockIntervalInMinutes);
-    nextBlockTime.setSeconds(0);
-    nextBlockTime.setMilliseconds(0);
-    const timestamp = new Date().toISOString().replace('T', ' ').slice(0, -5);
-    const nextBlockTimeLog = nextBlockTime.toISOString().replace('T', ' ').slice(0, -5);
-    console.log(`${timestamp} - Blocking until ${nextBlockTimeLog}`);
     blockDomains();
-    setTimeout(() => {
-      unblockDomains();
-      scheduleBlock();
-    }, nextBlockTime - currentTime);
   }
 }
 
-scheduleBlock();
+function onTimeChange() {
+  const currentTime = new Date();
+  const currentMinutes = currentTime.getMinutes();
+
+  if (currentMinutes === 0 || currentMinutes === 30) {
+    unblockDomains();
+  } else if (currentMinutes === 5 || currentMinutes === 35) {
+    blockDomains();
+  }
+
+  // Wait for the next minute
+  setTimeout(onTimeChange, (60 - currentTime.getSeconds()) * 1000);
+}
+
+// Initial check and application of the correct state
+checkCurrentTime();
+
+// Start listening for time changes
+onTimeChange();
