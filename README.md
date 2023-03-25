@@ -13,7 +13,8 @@ WebShackle is a Node.js script that allows access to certain websites for 5 minu
 
 1. Clone or download the repository to your local machine.
 2. Make `shackle` executable by running `chmod +x shackle`.
-3. Copy the `webshackle.js` and `shackle` files to a directory in your local bin folder (e.g. `/usr/local/bin`).
+3. Edit `blocked_domains.txt` to your preference (one domain per line) 
+4. Copy the `webshackle.js`, `shackle` and `blocked_domains.txt` files to a directory in your local bin folder (e.g. `/usr/local/bin`).
 
 ## Usage
 
