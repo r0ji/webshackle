@@ -17,11 +17,14 @@ WebShackle is a Node.js script that allows access to certain websites for 5 minu
 
 ## Usage
 
-To start blocking access to the list of websites, run the following command: `shackle on`
+To start blocking access to the list of websites, run the following command: `shackle on`. 
 
-To stop blocking access to the list of websites, run the following command: `shackle off`
+To stop blocking access to the list of websites, run the following command: `shackle off`.
 
+You will be prompted for your sudo password in order to edit the hosts file.
 
-Please note that when you turn off the blocking, WebShackle will also remove all blocking entries that it added to the `/etc/hosts` file, including any added by previous instances of the script. 
+## Notes
+
+When you turn off the blocking, WebShackle will remove all blocking entries that it added to the `/etc/hosts` file, including any added by previous instances of the script. 
 
 If you need to remove the blocking entries manually, look for any lines in `/etc/hosts` that contain the comment `# Added by WebShackle`.
