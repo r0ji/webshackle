@@ -1,19 +1,31 @@
-#!/usr/bin/env node
+const fs = require('fs');
+const path = require('path');
 
-const blockedDomains = [
-  'news.ycombinator.com', 
-  'example.com'
-  ];
+const blockedDomainsFile = path.join(__dirname, 'blocked_domains.txt');
+
+let blockedDomains = [];
+
+try {
+  if (fs.existsSync(blockedDomainsFile)) {
+    blockedDomains = fs.readFileSync(blockedDomainsFile, 'utf8').split('\n').filter(Boolean);
+  } else {
+    console.error(`Error: ${blockedDomainsFile} does not exist.`);
+    process.exit(1);
+  }
+} catch (err) {
+    console.error('Error reading ${blockedDomainsFile}: ', err.message);
+    process.exit(1);
+}
 
 const blockIP = '0.0.0.0';
 
 function unblockDomains() {
   blockedDomains.forEach((domain) => {
     const hostsFile = '/etc/hosts';
-    let hosts = require('fs').readFileSync(hostsFile, 'utf8');
+    let hosts = fs.readFileSync(hostsFile, 'utf8');
     const re = new RegExp(`(^|\\n)${blockIP}\\s${domain}(\\s+# Added by WebShackle)?`, 'g');
     hosts = hosts.replace(re, '');
-    require('fs').writeFileSync(hostsFile, hosts);
+    fs.writeFileSync(hostsFile, hosts);
     const timestamp = new Date().toISOString().replace('T', ' ').slice(0, -5);
     console.log(`${timestamp} - UNBLOCKED: ${domain}`);
   });
@@ -23,9 +35,9 @@ function blockDomains() {
   blockedDomains.forEach((domain) => {
     const entry = `${blockIP} ${domain}`;
     const hostsFile = '/etc/hosts';
-    const hosts = require('fs').readFileSync(hostsFile, 'utf8');
+    const hosts = fs.readFileSync(hostsFile, 'utf8');
     if (!hosts.includes(entry)) {
-      require('fs').appendFileSync(hostsFile, `\n${entry} # Added by WebShackle`);
+      fs.appendFileSync(hostsFile, `\n${entry} # Added by WebShackle`);
       const timestamp = new Date().toISOString().replace('T', ' ').slice(0, -5);
       console.log(`${timestamp} - BLOCKED: ${domain}`);
     }
